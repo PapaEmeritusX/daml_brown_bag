@@ -1,0 +1,85 @@
+module Rent where
+
+import Daml.Script
+
+type AgreeId = ContractId RentAgreement
+type RejectId = ContractId Rejection
+
+
+template RentAgreement
+  with
+    landlord: Party
+    tenant: Party
+    rentAmount: Decimal
+    currency: Text
+    paymentDate: Int
+    terms: Text
+  where 
+    signatory landlord, tenant 
+
+template RentProposal
+  with
+    landlord: Party
+    tenant: Party
+    rentAmount: Decimal
+    currency: Text
+    paymentDate: Int
+    terms: Text
+  where 
+    signatory landlord 
+    observer tenant
+    choice AcceptProposal: ContractId RentAgreement
+      controller tenant
+        do create RentAgreement with ..
+    choice RejectProposal: ContractId Rejection 
+      with rejectReason: Text
+      controller tenant 
+        do create Rejection with ..
+
+template Rejection
+  with
+    landlord: Party
+    tenant: Party
+    rentAmount: Decimal
+    currency: Text
+    paymentDate: Int
+    terms: Text
+    rejectReason: Text
+  where 
+    signatory landlord, tenant
+    
+                    
+-- setup : Script RejectId
+setup : Script()
+setup = script do
+
+  alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
+  bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
+  aliceId <- validateUserId "alice"
+  bobId <- validateUserId "bob"
+  createUser (User aliceId (Some alice)) [CanActAs alice]
+  createUser (User bobId (Some bob)) [CanActAs bob]
+-- user_setup_end
+
+-- rentTest : Script ()
+-- rentTest = script do 
+  
+--   landlord <- allocateParty "Jon"
+--   tenant <- allocateParty "Max"
+
+  -- rentProposal <- submit alice do
+  --   createCmd RentProposal with 
+  --     landlord = alice
+  --     tenant = bob
+  --     rentAmount = 1000.0
+  --     currency = "USD"
+  --     paymentDate = 10
+  --     terms = "Terms and Conditions"
+
+  -- submit bob do
+  --  exerciseCmd rentProposal RejectProposal with rejectReason = "Too expensive"
+  -- submit bob 
+  --   do exerciseCmd rentProposal AcceptProposal
+  -- submit bob 
+  --   do exerciseCmd rentProposal RejectProposal
+  return()
